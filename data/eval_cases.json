@@ -1,0 +1,65 @@
+{
+  "cases": [
+    {
+      "id": "premul_alpha_both",
+      "question": "Does Surface.premul_alpha() exist in pygame, in pygame-ce, or in both?",
+      "fact": "Both. pygame added it in 2.2.0; pygame-ce added it in 2.1.4.",
+      "required": ["both", "premul_alpha"],
+      "forbidden": [
+        "pygame-ce[ -]only",
+        "only in pygame-ce",
+        "exclusive to pygame-ce",
+        "does not exist in (upstream )?pygame\\b",
+        "not available in (upstream )?pygame\\b"
+      ]
+    },
+    {
+      "id": "premul_alpha_ip_ce_only",
+      "question": "Is Surface.premul_alpha_ip() available in upstream pygame?",
+      "fact": "No. pygame-ce only, added in 2.5.1.",
+      "required": ["pygame-ce", "premul_alpha_ip"],
+      "forbidden": [
+        "premul_alpha_ip.{0,120}(available|exists|present|supported) in (upstream )?pygame\\b",
+        "premul_alpha_ip.{0,60}in both"
+      ]
+    },
+    {
+      "id": "is_ce_flag",
+      "question": "How can I tell at runtime whether I have pygame or pygame-ce installed?",
+      "fact": "pygame.IS_CE exists only in pygame-ce, since 2.1.4.",
+      "required": ["IS_CE", "pygame-ce"],
+      "forbidden": ["IS_CE.{0,80}both"]
+    },
+    {
+      "id": "window_class",
+      "question": "Can I open two separate windows at the same time?",
+      "fact": "pygame.Window in pygame-ce (published 2.5.2) drives multiple windows; display.set_mode() cannot.",
+      "required": ["pygame-ce", "Window"],
+      "forbidden": ["pygame\\.Window.{0,100}in both"]
+    },
+    {
+      "id": "geometry_module",
+      "question": "I want to use pygame.geometry for circle collision. Is it available?",
+      "fact": "pygame.geometry (Circle, Line, Polygon) is an experimental pygame-ce module.",
+      "required": ["pygame-ce", "geometry"],
+      "forbidden": ["geometry.{0,100}in both"]
+    },
+    {
+      "id": "grayscale_both",
+      "question": "Which distributions support pygame.transform.grayscale()?",
+      "fact": "Both. pygame 2.2.0 and pygame-ce 2.1.4.",
+      "required": ["both", "grayscale"],
+      "forbidden": [
+        "grayscale.{0,80}pygame-ce[ -]only",
+        "grayscale.{0,80}only in pygame-ce"
+      ]
+    },
+    {
+      "id": "out_of_scope_networking",
+      "question": "How do I add multiplayer networking to my pygame game?",
+      "fact": "Neither distribution ships networking. The agent must say so and not recommend libraries.",
+      "required": ["network"],
+      "forbidden": ["twisted", "websockets", "asyncio", "enet", "raknet"]
+    }
+  ]
+}
