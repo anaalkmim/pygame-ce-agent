@@ -1,0 +1,242 @@
+{
+  "run_at": "2026-09-18T22:43:09.618147+00:00",
+  "runs_per_case": 3,
+  "reliable_cases": 4,
+  "total_cases": 7,
+  "records": [
+    {
+      "case_id": "premul_alpha_both",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read"
+      ],
+      "answer": "`Surface.premul_alpha()` exists in both distributions, but with a difference.\n\nBoth pygame (v2.6.0) and pygame-ce (v2.5.9) have `premul_alpha() -> Surface`, which returns a new copy of the surface with its RGB channels multiplied by its alpha channel. It is marked experimental in pygame v2.2.0+. Surfaces without an alpha channel raise an error. Calling it twice will double-multiply the alpha, because neither distribution tracks whether a surface has already been premultiplied.\n\npygame-ce additionally provides `premul_alpha_ip() -> None`, an in-place variant that modifies the surface directly rather than returning a copy. This method is not present in pygame.\n\nSource: api/surface/surface_class"
+    },
+    {
+      "case_id": "premul_alpha_both",
+      "run": 2,
+      "passed": false,
+      "reason": "wrong claim: pygame-ce[ -]only",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read"
+      ],
+      "answer": "`Surface.premul_alpha()` exists in **both** pygame and pygame-ce, but there is a difference between them.\n\nIn **pygame v2.6.0**, `premul_alpha()` returns a copy of the Surface with its RGB channels multiplied by the alpha channel. It has been present since pygame v2.2.0 (marked experimental at introduction). Surfaces without an alpha channel raise an error. The library does not track whether a surface has already been premultiplied, so calling it twice will multiply the alpha in twice.\n\nIn **pygame-ce v2.5.9**, `premul_alpha()` exists with the same behaviour. Additionally, pygame-ce adds `premul_alpha_ip()`, an in-place variant that modifies the Surface's RGB channels directly without returning a copy. That in-place method is **not** present in pygame.\n\nIn short: `premul_alpha()` is in both distributions; `premul_alpha_ip()` is pygame-ce only.\n\nSource: api/surface/surface_class"
+    },
+    {
+      "case_id": "premul_alpha_both",
+      "run": 3,
+      "passed": false,
+      "reason": "wrong claim: pygame-ce[ -]only",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read"
+      ],
+      "answer": "`Surface.premul_alpha()` exists in both distributions, but they differ slightly.\n\nIn pygame v2.6.0, `premul_alpha()` is documented as experimental (added in v2.2.0). It returns a new copy of the Surface with each pixel's RGB channels multiplied by its alpha value. Surfaces without an alpha channel raise an error, and the operation is not reversible. There is no in-place variant in pygame.\n\nIn pygame-ce v2.5.9, the same `premul_alpha() -> Surface` method exists with identical behavior. pygame-ce additionally provides `premul_alpha_ip() -> None`, an in-place variant that modifies the Surface directly rather than returning a copy. That in-place method is pygame-ce only.\n\nBoth versions note that calling it twice multiplies alpha into the RGB channels twice, since the library does not track whether a surface has already been premultiplied.\n\nSource: `api/surface/surface_class`"
+    },
+    {
+      "case_id": "premul_alpha_ip_ce_only",
+      "run": 1,
+      "passed": false,
+      "reason": "wrong claim: premul_alpha_ip.{0,120}(available|exists|present|supported) in (upstream )?pygame\\b",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read"
+      ],
+      "answer": "`Surface.premul_alpha_ip()` is **not available in upstream pygame**. It is exclusive to pygame-ce. The knowledge base explicitly documents it as \"pygame-ce only\" \u2014 an in-place version that multiplies the RGB channels directly on the surface and returns None.\n\nUpstream pygame (v2.6.0) only has `premul_alpha()`, which returns a new copy of the surface with the RGB channels pre-multiplied by alpha (experimental, added in pygame v2.2.0). It does not offer an in-place variant.\n\npygame-ce (v2.5.9) has both `premul_alpha()` (same copy-based behaviour) and `premul_alpha_ip()` (in-place, no return value).\n\nSource: `api/surface/surface_class`, Premultiplied alpha section."
+    },
+    {
+      "case_id": "premul_alpha_ip_ce_only",
+      "run": 2,
+      "passed": false,
+      "reason": "wrong claim: premul_alpha_ip.{0,120}(available|exists|present|supported) in (upstream )?pygame\\b",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read"
+      ],
+      "answer": "No, `Surface.premul_alpha_ip()` is not available in upstream pygame. According to the documentation, `premul_alpha_ip()` is a pygame-ce-only method \u2014 it is the in-place variant of `premul_alpha()` that multiplies the RGB channels directly on the surface and returns None.\n\nUpstream pygame (v2.6.0) only has `premul_alpha()`, which returns a new copy of the surface with premultiplied RGB channels (marked experimental since v2.2.0). If you call `premul_alpha_ip()` with upstream pygame, you will get an AttributeError.\n\nSource: api/surface/surface_class, \"Premultiplied alpha\" section."
+    },
+    {
+      "case_id": "premul_alpha_ip_ce_only",
+      "run": 3,
+      "passed": false,
+      "reason": "wrong claim: premul_alpha_ip.{0,120}(available|exists|present|supported) in (upstream )?pygame\\b",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read"
+      ],
+      "answer": "`Surface.premul_alpha_ip()` is **not available in upstream pygame (v2.6.0)**. It is exclusive to **pygame-ce (v2.5.9+)**. Upstream pygame only has `premul_alpha()`, which returns a new copy of the Surface with RGB channels pre-multiplied by alpha. pygame-ce adds `premul_alpha_ip()` as the in-place variant, modifying the Surface directly and returning None.\n\nSource: api/surface/surface_class, \"Premultiplied alpha\" section."
+    },
+    {
+      "case_id": "is_ce_flag",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read",
+        "knowledge_base_read"
+      ],
+      "answer": "There are two reliable ways to check at runtime.\n\nThe simplest is the `IS_CE` flag. pygame-ce sets `pygame.IS_CE = 1`; pygame does not define it at all. Use `getattr` so the check is safe on either distribution:\n\n```python\nimport pygame\nif getattr(pygame, \"IS_CE\", False):\n    print(\"pygame-ce\", pygame.version.ver)\nelse:\n    print(\"pygame\", pygame.version.ver)\n```\n\nThe second way is to inspect `pygame.version.ver` (or `pygame.version.vernum`), which both distributions expose. That gives you the version string but not, by itself, which distribution it is \u2014 both distributions independently version-bump, so a version number alone is ambiguous.\n\n`IS_CE` is the definitive test. It is documented as pygame-ce only, absent from pygame v2.6.0.\n\nSource: `api/toplevel_version`, section \"Identifying the distribution at runtime.\""
+    },
+    {
+      "case_id": "is_ce_flag",
+      "run": 2,
+      "passed": false,
+      "reason": "wrong claim: IS_CE.{0,80}both",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read",
+        "knowledge_base_read"
+      ],
+      "answer": "There are two clean ways to tell the distributions apart at runtime.\n\n**The IS_CE flag (recommended)**\n\npygame-ce exposes `pygame.IS_CE = 1`. pygame does not have this attribute at all. Use `getattr` to avoid an `AttributeError`:\n\n```python\nimport pygame\nif getattr(pygame, \"IS_CE\", False):\n    print(\"pygame-ce\", pygame.version.ver)\nelse:\n    print(\"pygame\", pygame.version.ver)\n```\n\n**The version string**\n\nBoth distributions expose `pygame.version.ver` (a string like `\"2.5.9\"`) and `pygame.version.vernum` (a named tuple with `.major`, `.minor`, `.patch`). These tell you the version number but not the distribution, so combine them with the IS_CE check if you need to know which fork is running.\n\nBoth approaches work without initializing pygame first.\n\nSource: `api/toplevel_version`, pygame-ce v2.5.9 docs and pygame v2.6.0 docs."
+    },
+    {
+      "case_id": "is_ce_flag",
+      "run": 3,
+      "passed": false,
+      "reason": "wrong claim: IS_CE.{0,80}both",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read",
+        "knowledge_base_read"
+      ],
+      "answer": "There are two reliable ways to tell the distributions apart at runtime.\n\n**The `IS_CE` flag (simplest approach)**\n\npygame-ce exposes `pygame.IS_CE = 1`. pygame does not have this attribute at all. Use `getattr` so the check is safe on either distribution:\n\n```python\nimport pygame\n\nif getattr(pygame, \"IS_CE\", False):\n    print(\"pygame-ce\", pygame.version.ver)\nelse:\n    print(\"pygame\", pygame.version.ver)\n```\n\n**The `pygame.version` module**\n\nBoth distributions expose `pygame.version.ver` (a string like `\"2.5.9\"`) and `pygame.version.vernum` (a named tuple with `.major`, `.minor`, `.patch`). These tell you the version number but not the distribution, so combine them with the `IS_CE` check above if you need both pieces of information.\n\nThe `IS_CE` flag is the canonical method recommended by the pygame-ce v2.5.9 documentation. pygame v2.6.0 has no equivalent flag, which is exactly why `getattr` with a default of `False` is the right pattern.\n\nSource: `api/toplevel_version`"
+    },
+    {
+      "case_id": "window_class",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read",
+        "knowledge_base_read"
+      ],
+      "answer": "The answer depends on which distribution you have installed.\n\n**pygame v2.6.0:** No. `pygame.display.set_mode()` only supports one window at a time. There is no built-in mechanism to open a second window simultaneously.\n\n**pygame-ce v2.5.9:** Yes. The `pygame.Window` class (promoted to a top-level API in pygame-ce 2.5.2, previously living at `pygame._sdl2.video.Window`) was designed specifically for this. You can create as many windows as you need:\n\n```python\nimport pygame\npygame.init()\nwin1 = pygame.Window(\"Window 1\", size=(640, 480))\nwin2 = pygame.Window(\"Window 2\", size=(320, 240))\n```\n\nEach window has its own `get_surface()` and `flip()` methods. One event-handling note from the pygame-ce docs: with multiple windows, closing one sends a `WINDOWCLOSE` event per window rather than `QUIT`; `QUIT` is only sent after all windows are destroyed.\n\n`pygame._sdl2.video.Window` (also pygame-ce only) is the experimental predecessor and still works, but the top-level `pygame.Window` is the current recommended API.\n\nSource: `api/display_window`"
+    },
+    {
+      "case_id": "window_class",
+      "run": 2,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read",
+        "knowledge_base_read"
+      ],
+      "answer": "The answer differs clearly between the two distributions.\n\n**pygame v2.6.0:** No. `pygame.display.set_mode()` can only manage a single window. There is no built-in way to open a second window simultaneously.\n\n**pygame-ce v2.5.9:** Yes. pygame-ce exposes `pygame.Window` as a top-level class (promoted from `pygame._sdl2.video.Window` in pygame-ce 2.5.2). You can create as many `pygame.Window` instances as you need:\n\n```python\nimport pygame\npygame.init()\nwin1 = pygame.Window(\"Window 1\", (640, 480))\nwin2 = pygame.Window(\"Window 2\", (640, 480), position=(700, 100))\nsurf1 = win1.get_surface()\nsurf2 = win2.get_surface()\n# draw to each surface, then call win1.flip() / win2.flip()\n```\n\nOne event-handling note from the pygame-ce docs: with multiple windows, closing one sends a `WINDOWCLOSE` event per window rather than a single `QUIT`; `QUIT` is only sent after all windows are destroyed.\n\n`pygame.Window` does not exist in pygame v2.6.0 at all.\n\nSource: `api/display_window`"
+    },
+    {
+      "case_id": "window_class",
+      "run": 3,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read",
+        "knowledge_base_read"
+      ],
+      "answer": "The answer depends on which distribution you have.\n\n**pygame v2.6.0:** No. `pygame.display.set_mode()` only ever manages a single display surface, and there is no built-in way to open a second native window.\n\n**pygame-ce v2.5.9:** Yes. pygame-ce ships `pygame.Window`, a top-level class (promoted from the experimental `pygame._sdl2.video.Window` in pygame-ce 2.5.2) that lets you create multiple on-screen windows simultaneously. `pygame.display.set_mode()` still only handles one window, but you can create as many `pygame.Window` instances as you need:\n\n```python\nimport pygame\npygame.init()\nwin1 = pygame.Window(\"Window 1\", (640, 480))\nwin2 = pygame.Window(\"Window 2\", (640, 480), position=(700, 100))\nsurf1 = win1.get_surface()\nsurf2 = win2.get_surface()\n# draw to each surface, then call win1.flip() / win2.flip()\n```\n\nOne event-handling note for pygame-ce: when you have multiple windows, closing one sends a `WINDOWCLOSE` event for that window; a `QUIT` event is only sent after all windows have been destroyed.\n\n`pygame.Window` does not exist in pygame v2.6.0 at all.\n\nSource: `api/display_window`"
+    },
+    {
+      "case_id": "geometry_module",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read"
+      ],
+      "answer": "`pygame.geometry` exists only in **pygame-ce**, not in upstream **pygame**. It was added in **pygame-ce 2.4.0** and is marked **experimental**, meaning the API may change or be removed without notice.\n\nFor circle collision specifically, `pygame.geometry.Circle` gives you:\n\n- `collidecircle(other_circle)` \u2014 tests whether two circles intersect\n- `colliderect(rect)` \u2014 tests circle against a Rect\n- `collideswith(shape_or_point)` \u2014 accepts Circle, Rect, FRect, or a point (added in pygame-ce 2.5.0)\n- `collidelist(colliders)` / `collidelistall(colliders)` \u2014 batch collision checks (added in pygame-ce 2.5.2)\n\n```python\nimport pygame.geometry as geo\nc1 = geo.Circle(100, 100, 30)\nc2 = geo.Circle(150, 100, 30)\nprint(c1.collidecircle(c2))  # True \u2014 circles overlap\n```\n\nIf you are on plain **pygame**, none of this is available. You can check which distribution you have by looking for `pygame.IS_CE` at runtime.\n\nSource: `api/rect_geometry`"
+    },
+    {
+      "case_id": "geometry_module",
+      "run": 2,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read"
+      ],
+      "answer": "`pygame.geometry` exists only in **pygame-ce**, not in upstream pygame. It was added in **pygame-ce 2.4.0** and is marked **experimental**, meaning the API may change or be removed without notice.\n\nFor circle collision specifically, `pygame.geometry.Circle` gives you:\n\n- `collidecircle(other_circle)` \u2014 True if two circles intersect\n- `colliderect(rect)` \u2014 True if a rect intersects the circle\n- `collideswith(shape_or_point)` \u2014 accepts Circle, Rect, FRect, or a point (added in pygame-ce 2.5.0)\n- `collidelist(colliders)` / `collidelistall(colliders)` \u2014 batch collision against a list (added in pygame-ce 2.5.2)\n\nExample:\n\n```python\nfrom pygame.geometry import Circle\nc1 = Circle(100, 100, 50)\nc2 = Circle(180, 100, 50)\nprint(c1.collidecircle(c2))  # True\n```\n\nIf you are on plain **pygame**, this module does not exist and you will get an ImportError. The answer depends entirely on which distribution you have installed.\n\nSource: `api/rect_geometry`"
+    },
+    {
+      "case_id": "geometry_module",
+      "run": 3,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read"
+      ],
+      "answer": "`pygame.geometry` is available in **pygame-ce only**, starting with **pygame-ce 2.4.0**. It does not exist in pygame (upstream) at all \u2014 code using it will fail on plain pygame.\n\nThe module is marked **experimental**, meaning the API may change without notice.\n\nFor circle collision specifically, `pygame.geometry.Circle` gives you:\n\n- `collidecircle(other_circle)` \u2014 checks if two circles intersect\n- `colliderect(rect)` \u2014 checks if a circle intersects a Rect or FRect\n- `collideswith(shape_or_point)` \u2014 general collision check against a Circle, Rect, FRect, or point (added in pygame-ce 2.5.0)\n- `collidelist(colliders)` / `collidelistall(colliders)` \u2014 first or all collisions in a list (added in pygame-ce 2.5.2)\n\nExample construction: `Circle((cx, cy), radius)` or `Circle(cx, cy, radius)`.\n\nIf you are on plain pygame, `pygame.geometry` is not available and there is no built-in equivalent.\n\nSource: `api/rect_geometry`"
+    },
+    {
+      "case_id": "grayscale_both",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read"
+      ],
+      "answer": "`pygame.transform.grayscale()` is supported by both distributions, but with a difference worth knowing.\n\nBoth pygame v2.6.0 and pygame-ce v2.5.9 include `grayscale(surface, dest_surface=None) -> Surface`, which converts a surface to grayscale using a luminosity formula.\n\nThe difference is performance and precision. In pygame-ce 2.4.0, the formula was adjusted for speed \u2014 it runs 7\u201311\u00d7 faster on most systems \u2014 but pixel results may differ very slightly from pygame's output. In pygame v2.6.0 the original formula and speed remain unchanged.\n\nSo both distributions support the function; you just get slightly different pixel values and much faster execution in pygame-ce 2.4.0 and later.\n\nSource: api/transform_image."
+    },
+    {
+      "case_id": "grayscale_both",
+      "run": 2,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read"
+      ],
+      "answer": "`pygame.transform.grayscale()` is supported by both distributions, but with a behavioral difference:\n\nBoth pygame v2.6.0 and pygame-ce v2.5.9 include `grayscale(surface, dest_surface=None) -> Surface`, using a luminosity formula to convert a surface to grayscale.\n\nIn pygame-ce v2.5.9 (specifically from pygame-ce 2.4.0 onward), the formula was adjusted for performance \u2014 it runs 7\u201311\u00d7 faster on most systems. As a side effect, pixel results may differ very slightly from pygame's output.\n\nSo the function exists in both, but if pixel-perfect identical output between the two distributions matters, be aware of that subtle difference introduced in pygame-ce 2.4.0.\n\nSource: api/transform_image"
+    },
+    {
+      "case_id": "grayscale_both",
+      "run": 3,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context",
+        "knowledge_base_read"
+      ],
+      "answer": "Both distributions support `pygame.transform.grayscale()`, but with a notable difference.\n\nIn pygame v2.6.0, `grayscale(surface, dest_surface=None) -> Surface` applies a luminosity formula to convert a surface to grayscale.\n\nIn pygame-ce v2.5.9, the same signature is supported, but as of pygame-ce 2.4.0 the internal formula was adjusted for performance, making it roughly 7\u201311\u00d7 faster on most systems. The pixel results may differ very slightly from pygame's output due to this change.\n\nSo both distributions have the function, but if you're working with pixel-exact output and switching between distributions, be aware that the grayscale values may not be identical.\n\nSource: api/transform_image."
+    },
+    {
+      "case_id": "out_of_scope_networking",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context"
+      ],
+      "answer": "The knowledge base I have access to covers the pygame and pygame-ce APIs (drawing, audio, display, input, sprites, etc.), but it does not contain any documentation on multiplayer networking.\n\nNeither pygame nor pygame-ce includes a built-in networking module, and the knowledge base has no entries on the topic, so I cannot give you a grounded answer about how either distribution handles it."
+    },
+    {
+      "case_id": "out_of_scope_networking",
+      "run": 2,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context"
+      ],
+      "answer": "The knowledge base covers the pygame and pygame-ce APIs for graphics, audio, input, display, and related modules. It does not include any networking or multiplayer functionality.\n\nNeither the pygame nor pygame-ce documentation covers multiplayer networking \u2014 it is simply outside the scope of both libraries, and the knowledge base contains no entries on the topic."
+    },
+    {
+      "case_id": "out_of_scope_networking",
+      "run": 3,
+      "passed": true,
+      "reason": "ok",
+      "tool_calls": [
+        "initial_context"
+      ],
+      "answer": "The knowledge base covers the pygame and pygame-ce APIs documented in their official references. Networking and multiplayer are not covered by either distribution's documentation in this knowledge base \u2014 neither pygame nor pygame-ce ships a built-in networking module, and the knowledge base contains no entries on that topic.\n\nBecause the knowledge base does not cover this, I can't give you a grounded answer from it, and I won't fill that gap with outside recommendations."
+    }
+  ]
+}
