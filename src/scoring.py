@@ -1,27 +1,31 @@
 """Deterministic scoring for agent answers. No network, so it is unit testable.
 
-Each case lists regex patterns: `required` must appear in a correct answer,
-`forbidden` marks a specific wrong claim. Matching is case-insensitive.
-This catches gross errors, not subtle ones — read the saved answers too.
+The agent ends each answer with lines shaped like
+
+    VERDICT: premul_alpha = pygame:yes, pygame-ce:no
+
+Scoring compares those lines, not the prose. Matching prose by substring
+proved unusable: "not available in pygame" contains "available in pygame",
+and an answer about two methods cannot say which claim a match belongs to.
 """
 
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
-FLAGS = re.IGNORECASE | re.DOTALL
+VERDICT_LINE = re.compile(r"^\s*VERDICT:\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE)
+NOT_COVERED = "not covered"
 
 
 @dataclass
 class Case:
-    """One evaluation question and the claims that decide its verdict."""
+    """One evaluation question and the verdict a correct answer must reach."""
 
     id: str
     question: str
     fact: str
-    required: list[str] = field(default_factory=list)
-    forbidden: list[str] = field(default_factory=list)
+    expected: str
 
 
 @dataclass
@@ -30,8 +34,8 @@ class Verdict:
 
     case_id: str
     passed: bool
-    missing_required: list[str]
-    matched_forbidden: list[str]
+    expected: str
+    found: list[str]
     used_knowledge_base: bool
 
     @property
@@ -39,28 +43,59 @@ class Verdict:
         """Short explanation of why a case failed."""
         if self.passed:
             return "ok"
-        parts = []
         if not self.used_knowledge_base:
-            parts.append("no knowledge base call")
-        if self.missing_required:
-            parts.append("missing: " + ", ".join(self.missing_required))
-        if self.matched_forbidden:
-            parts.append("wrong claim: " + ", ".join(self.matched_forbidden))
-        return "; ".join(parts)
+            return "no knowledge base call"
+        if not self.found:
+            return "no verdict line in answer"
+        return f"got {self.found}"
+
+
+def parse_claim(text: str) -> tuple[str, dict[str, str]] | None:
+    """Turn one verdict body into a name and a distribution map.
+
+    Returns None when the text does not have the expected shape, so a
+    malformed line counts as no verdict rather than as a silent pass.
+    """
+    body = text.strip().rstrip(".")
+    if body.lower() == NOT_COVERED:
+        return NOT_COVERED, {}
+    if "=" not in body:
+        return None
+
+    name, _, rest = body.partition("=")
+    distributions = {}
+    for chunk in rest.split(","):
+        key, sep, value = chunk.partition(":")
+        if not sep:
+            return None
+        distributions[key.strip().lower()] = value.strip().lower()
+
+    if not distributions:
+        return None
+    # Keep only the last dotted segment: the model writes the same claim
+    # as "premul_alpha", "Surface.premul_alpha" or "pygame.Surface.premul_alpha".
+    return name.strip().lower().rsplit(".", 1)[-1], distributions
+
+
+def find_claims(answer: str) -> list[tuple[str, dict[str, str]]]:
+    """Collect every well-formed verdict line in an answer."""
+    parsed = [parse_claim(m) for m in VERDICT_LINE.findall(answer)]
+    return [claim for claim in parsed if claim is not None]
+
+
+def score(case: Case, answer: str, tool_calls: list[str]) -> Verdict:
+    """Score one answer. An answer that skipped the knowledge base fails."""
+    expected = parse_claim(case.expected)
+    claims = find_claims(answer)
+    grounded = bool(tool_calls)
+    passed = grounded and expected is not None and expected in claims
+    found = [m.strip() for m in VERDICT_LINE.findall(answer)]
+    return Verdict(case.id, passed, case.expected, found, grounded)
 
 
 def load_cases(path: Path) -> list[Case]:
     """Read the case file and return it as Case objects."""
     return [Case(**e) for e in json.loads(path.read_text())["cases"]]
-
-
-def score(case: Case, answer: str, tool_calls: list[str]) -> Verdict:
-    """Score one answer. An answer that skipped the knowledge base fails."""
-    missing = [p for p in case.required if not re.search(p, answer, FLAGS)]
-    matched = [p for p in case.forbidden if re.search(p, answer, FLAGS)]
-    grounded = bool(tool_calls)
-    ok = grounded and not missing and not matched
-    return Verdict(case.id, ok, missing, matched, grounded)
 
 
 def stability(verdicts: list[Verdict]) -> str:
